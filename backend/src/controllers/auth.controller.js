@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
   try {
