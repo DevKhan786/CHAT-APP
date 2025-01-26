@@ -6,9 +6,11 @@ import { useAuthStore } from "./useAuthStore";
 // Define types for Message, User, and State
 interface Message {
   _id: string;
-  content: string;
   senderId: string;
   timestamp: string;
+  text: string;
+  image: string;
+  createdAt: Date;
 }
 
 interface User {
@@ -25,10 +27,13 @@ interface ChatStore {
 
   getUsers: () => Promise<void>;
   getMessages: (userId: string) => Promise<void>;
-  sendMessage: (messageData: { content: string }) => Promise<void>;
+  sendMessage: (messageData: {
+    text: string | null;
+    image: string | null;
+  }) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
-  setSelectedUser: (selectedUser: User) => void;
+  setSelectedUser: (selectedUser: User | null) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -64,7 +69,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   // Send a Message
-  sendMessage: async (messageData: { content: string }) => {
+  sendMessage: async (messageData: {
+    text: string | null;
+    image: string | null;
+  }) => {
     const { selectedUser, messages } = get();
     if (!selectedUser) return;
     try {
@@ -96,12 +104,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  // Unsubscribe from Messages
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket?.off("newMessage");
   },
 
-  // Set Selected User
-  setSelectedUser: (selectedUser: User) => set({ selectedUser }),
+  setSelectedUser: (selectedUser: User | null) => set({ selectedUser }),
 }));

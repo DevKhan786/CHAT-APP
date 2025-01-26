@@ -3,7 +3,9 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io, Socket } from "socket.io-client";
 
-// Interfaces for user, authentication data, and state
+const SOCKET_URL =
+  import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+
 interface AuthUser {
   _id: string;
   name: string;
@@ -67,6 +69,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const res = await axiosInstance.post("/auth/signup", data);
       toast.success("Account created successfully");
       set({ authUser: res.data, loading: false });
+      get().connectSocket();
     } catch (error: unknown) {
       console.error("Error in signup:", error);
       toast.error(
@@ -82,6 +85,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const res = await axiosInstance.post("/auth/login", data);
       toast.success("Logged in successfully");
       set({ authUser: res.data, loading: false });
+      get().connectSocket();
     } catch (error: unknown) {
       console.error("Error in login:", error);
       toast.error(
@@ -95,6 +99,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       await axiosInstance.post("/auth/logout");
       set({ authUser: null });
+      get().disconnectSocket();
     } catch (error: unknown) {
       console.error("Error in logout:", error);
     }
@@ -118,10 +123,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
-    const socket = io("BASE_URL", {
-      query: {
-        userId: authUser._id,
-      },
+    const socket = io(SOCKET_URL, {
+      query: { userId: authUser._id },
     });
 
     socket.connect();
